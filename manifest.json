@@ -1,0 +1,19 @@
+{
+  "name": "UAE POS Tax & Currency Utility",
+  "short_name": "Tax & FX POS",
+  "description": "UAE POS Tax Refund, Live Multi-Currency Converter, and Monthly Installment Planner",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#059669",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
