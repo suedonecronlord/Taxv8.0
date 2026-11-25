@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>UAE POS Tax & Currency Utility</title>
+
+  <meta name="theme-color" content="#059669" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Tax & FX POS" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="icon.svg" />
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --accent: #10b981;
+      --accent-text: #ffffff;
+      --border: rgba(255, 255, 255, 0.1);
+      --danger: #ef4444;
+    }
+
+    [data-theme="light"] {
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --surface-2: #e2e8f0;
+      --text: #0f172a;
+      --muted: #64748b;
+      --accent: #059669;
+      --accent-text: #ffffff;
+      --border: rgba(15, 23, 42, 0.12);
+    }
+
+    [data-theme="gold"] {
+      --bg: #171412;
+      --surface: #26211d;
+      --surface-2: #38302a;
+      --text: #fefce8;
+      --muted: #d6c7b2;
+      --accent: #eab308;
+      --accent-text: #171412;
+      --border: rgba(234, 179, 8, 0.22);
+    }
+
+    [data-theme="ocean"] {
+      --bg: #082f49;
+      --surface: #0c4a6e;
+      --surface-2: #0369a1;
+      --text: #f0f9ff;
+      --muted: #bae6fd;
+      --accent: #38bdf8;
+      --accent-text: #082f49;
+      --border: rgba(56, 189, 248, 0.22);
+    }
+
+    [data-theme="amoled"] {
+      --bg: #000000;
+      --surface: #111111;
+      --surface-2: #222222;
+      --text: #ffffff;
+      --muted: #a1a1aa;
+      --accent: #22c55e;
+      --accent-text: #000000;
+      --border: rgba(255, 255, 255, 0.15);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      height: 100dvh;
+      width: 100%;
+      overflow: hidden;
+      background: #020617;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      justify-content: center;
+      color: var(--text);
+    }
+
+    .app {
+      width: 100%;
+      max-width: 480px;
+      height: 100dvh;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      padding: env(safe-area-inset-top, 8px) 10px env(safe-area-inset-bottom, 8px) 10px;
+      gap: 6px;
+      overflow: hidden;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-weight: 800;
+      font-size: 13.5px;
+    }
+
+    .brand-badge {
+      background: var(--accent);
+      color: var(--accent-text);
+      width: 26px;
+      height: 26px;
+      border-radius: 7px;
+      display: grid;
+      place-items: center;
+      font-weight: 900;
+      font-size: 15px;
+      box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+    }
+
+    .controls {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    select, .icon-btn {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 4px 9px;
+      font-size: 11.5px;
+      font-weight: 700;
+      height: 29px;
+    }
+
+    .icon-btn {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: transform 0.08s ease;
+    }
+
+    .icon-btn:active {
+      transform: scale(0.95);
+    }
+
+    .icon-btn.accent {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+    }
+
+    .input-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 12px;
+      flex-shrink: 0;
+    }
+
+    .input-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .currency-tag {
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--accent);
+      letter-spacing: 0.6px;
+      flex-shrink: 0;
+    }
+
+    .amount-display {
+      font-size: 27px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.5px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .presets {
+      display: flex;
+      gap: 5px;
+      margin-top: 6px;
+    }
+
+    .chip {
+      flex: 1;
+      background: var(--surface-2);
+      color: var(--text);
+      border: none;
+      border-radius: 7px;
+      padding: 5px 0;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .chip:active {
+      opacity: 0.75;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      background: var(--surface);
+      padding: 4px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .tab {
+      background: transparent;
+      color: var(--muted);
+      border: none;
+      padding: 6px 4px;
+      border-radius: 7px;
+      font-size: 11.5px;
+      font-weight: 700;
+      cursor: pointer;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tab.active {
+      background: var(--accent);
+      color: var(--accent-text);
+    }
+
+    .panel {
+      flex: 0 1 auto;
+      max-height: 36dvh;
+      min-height: 158px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 10px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .panel::-webkit-scrollbar, .rate-list::-webkit-scrollbar {
+      width: 3px;
+    }
+    .panel::-webkit-scrollbar-thumb, .rate-list::-webkit-scrollbar-thumb {
+      background: var(--surface-2);
+      border-radius: 999px;
+    }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+
+    .stat-box {
+      background: var(--bg);
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .stat-val {
+      font-size: 14px;
+      font-weight: 800;
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .highlight-box {
+      background: var(--bg);
+      border: 1.5px solid var(--accent);
+      border-radius: 10px;
+      padding: 8px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: auto;
+    }
+
+    .tag-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11.5px;
+      background: var(--bg);
+      padding: 6px 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .stepper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step-btn {
+      width: 25px;
+      height: 25px;
+      border-radius: 6px;
+      border: none;
+      background: var(--surface-2);
+      color: var(--text);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .status-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 5px 8px;
+      border-radius: 7px;
+      text-align: center;
+    }
+
+    .ok {
+      background: rgba(16, 185, 129, 0.16);
+      color: #10b981;
+    }
+
+    .warn {
+      background: rgba(239, 68, 68, 0.16);
+      color: #ef4444;
+    }
+
+    .fx-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--accent);
+      background: rgba(16, 185, 129, 0.13);
+      padding: 3px 8px;
+      border-radius: 999px;
+    }
+
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.4s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.3; transform: scale(0.8); }
+    }
+
+    .fx-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+    }
+
+    .fx-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .fx-code { font-size: 11px; font-weight: 800; }
+    .fx-name { font-size: 9px; color: var(--muted); }
+    .fx-rate-sub { font-size: 8.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .fx-val {
+      font-size: 12.5px;
+      font-weight: 800;
+      font-variant-numeric: tabular-nums;
+      text-align: right;
+    }
+
+    .fee-bar {
+      display: flex;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .fee-btn {
+      flex: 1;
+      padding: 5px 2px;
+      font-size: 10.5px;
+      font-weight: 700;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    .fee-btn.active {
+      background: var(--accent);
+      color: var(--accent-text);
+      border-color: var(--accent);
+    }
+
+    .emi-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 5px;
+    }
+
+    .emi-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 8px;
+    }
+
+    .emi-mo {
+      font-size: 10px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .emi-amt {
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--accent);
+      margin-top: 2px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .emi-tot {
+      font-size: 9.5px;
+      color: var(--muted);
+      margin-top: 1px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .numpad {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 6px;
+      flex: 1 1 auto;
+      min-height: 210px;
+      width: 100%;
+    }
+
+    .key {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: clamp(1.35rem, 3.4vh, 1.85rem);
+      font-weight: 700;
+      cursor: pointer;
+      display: grid;
+      place-items: center;
+      height: 100%;
+      width: 100%;
+      font-variant-numeric: tabular-nums;
+      transition: transform 0.06s ease, opacity 0.1s ease;
+    }
+
+    .key:active {
+      opacity: 0.72;
+      transform: scale(0.97);
+    }
+
+    .key.fn {
+      background: var(--surface-2);
+      font-size: clamp(0.85rem, 2.1vh, 1.05rem);
+      font-weight: 800;
+    }
+
+    .key.danger {
+      background: rgba(239, 68, 68, 0.18);
+      color: #f87171;
+      font-size: clamp(0.95rem, 2.3vh, 1.15rem);
+      font-weight: 800;
+    }
+
+    .key.accent {
+      background: var(--accent);
+      color: var(--accent-text);
+      font-size: clamp(0.95rem, 2.3vh, 1.15rem);
+      font-weight: 800;
+      border: none;
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.74);
+      backdrop-filter: blur(3px);
+      display: none;
+      place-items: center;
+      padding: 14px;
+      z-index: 50;
+    }
+
+    .modal-backdrop.open {
+      display: grid;
+    }
+
+    .modal {
+      width: 100%;
+      max-width: 380px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-height: 88dvh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    }
+
+    .calc-screen {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px;
+      text-align: right;
+    }
+
+    .calc-expr { font-size: 11px; color: var(--muted); min-height: 15px; }
+    .calc-res { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+    .calc-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .c-btn {
+      height: 40px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .c-btn:active {
+      transform: scale(0.96);
+    }
+
+    .c-btn.op { background: var(--surface-2); color: var(--accent); }
+
+    .rate-list {
+      max-height: 250px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .rate-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .rate-input {
+      width: 110px;
+      padding: 5px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      text-align: right;
+      user-select: text;
+    }
+
+    .settings-section {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 9px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .settings-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+
+    .settings-select, .settings-input {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 12px;
+      height: auto;
+      user-select: text;
+    }
+
+    .country-form-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+
+    .country-preview {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 8px;
+      padding: 6px 9px;
+      color: var(--muted);
+    }
+
+    .fx-remove-btn {
+      background: transparent;
+      border: none;
+      color: #f87171;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+      padding: 0 3px;
+      margin-left: 3px;
+    }
+
+    .save-btn {
+      background: var(--accent);
+      color: var(--accent-text);
+      border: none;
+      border-radius: 8px;
+      padding: 8px;
+      font-size: 12px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .feedback-msg {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--accent);
+      min-height: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="appRoot">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-badge">$</div>
+        <span id="tTitle">UAE POS Utility</span>
+      </div>
+      <div class="controls">
+        <button class="icon-btn" id="openSettingsBtn" aria-label="Settings">Settings</button>
+        <button class="icon-btn accent" id="openCalcBtn">Calc</button>
+      </div>
+    </div>
+
+    <div class="input-card">
+      <div class="input-row">
+        <span class="currency-tag" id="tBaseLabel">AED INVOICE</span>
+        <div class="amount-display" id="mainDisplay" dir="ltr">1,000</div>
+      </div>
+      <div class="presets" dir="ltr">
+        <button class="chip" data-preset="250">250</button>
+        <button class="chip" data-preset="500">500</button>
+        <button class="chip" data-preset="1000">1,000</button>
+        <button class="chip" data-preset="2500">2,500</button>
+        <button class="chip" data-preset="5000">5,000</button>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="tax" id="tTabTax">Tax Refund</button>
+      <button class="tab" data-tab="fx" id="tTabFx">Currencies (13)</button>
+      <button class="tab" data-tab="emi" id="tTabEmi">Installments</button>
+    </div>
+
+    <div class="panel" id="panelTax">
+      <div class="status-pill ok" id="taxStatus">Eligible for Planet Tax Free (Min AED 250)</div>
+      <div class="stat-grid">
+        <div class="stat-box">
+          <div class="stat-label" id="tNetExcl">Net Price (Excl. 5% VAT)</div>
+          <div class="stat-val" id="valNet" dir="ltr">AED 952.38</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-label" id="tVatPaid">5% VAT Paid</div>
+          <div class="stat-val" id="valVat" dir="ltr">AED 47.62</div>
+        </div>
+      </div>
+      <div class="tag-row">
+        <span id="tTagFeeLabel">Planet Tags (AED 4.80 / tag)</span>
+        <div class="stepper" dir="ltr">
+          <button class="step-btn" id="tagMinus">-</button>
+          <strong id="tagCount">1</strong>
+          <button class="step-btn" id="tagPlus">+</button>
+        </div>
+      </div>
+      <div class="highlight-box">
+        <div>
+          <div class="stat-label" id="tRefundTitle">Estimated Tourist Refund (85% - Fee)</div>
+          <div style="font-size:20px;font-weight:900;color:var(--accent)" id="valRefundAed" dir="ltr">AED 35.68</div>
+        </div>
+        <div style="text-align:right" dir="ltr">
+          <select id="refundTargetCur" style="margin-bottom:3px"></select>
+          <div style="font-size:13px;font-weight:800" id="valRefundFx">PHP 561.96</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" id="panelFx" style="display:none">
+      <div class="fx-header">
+        <span class="live-badge" id="fxLiveBadge"><span class="live-dot"></span><span id="fxStatusText">Live 10s • Syncing...</span></span>
+        <div style="display:flex;gap:4px">
+          <button class="icon-btn" id="refreshRatesBtn" style="height:24px;font-size:10.5px">Refresh</button>
+          <button class="icon-btn" id="openRatesBtn" style="height:24px;font-size:10.5px">Edit</button>
+        </div>
+      </div>
+      <div class="fx-grid" id="fxGrid" dir="ltr"></div>
+    </div>
+
+    <div class="panel" id="panelEmi" style="display:none">
+      <div class="fee-bar" dir="ltr">
+        <button class="fee-btn active" data-fee="0">0% EPP</button>
+        <button class="fee-btn" data-fee="0.01">1% / mo</button>
+        <button class="fee-btn" data-fee="0.015">1.5% / mo</button>
+        <button class="fee-btn" data-fee="0.02">2% / mo</button>
+      </div>
+      <div class="emi-grid" id="emiGrid" dir="ltr"></div>
+    </div>
+
+    <div class="numpad" dir="ltr">
+      <button class="key" data-key="7">7</button>
+      <button class="key" data-key="8">8</button>
+      <button class="key" data-key="9">9</button>
+      <button class="key danger" data-key="BACK">DEL</button>
+
+      <button class="key" data-key="4">4</button>
+      <button class="key" data-key="5">5</button>
+      <button class="key" data-key="6">6</button>
+      <button class="key danger" data-key="CLEAR">AC</button>
+
+      <button class="key" data-key="1">1</button>
+      <button class="key" data-key="2">2</button>
+      <button class="key" data-key="3">3</button>
+      <button class="key fn" data-key="+5%">+5% VAT</button>
+
+      <button class="key" data-key="0">0</button>
+      <button class="key" data-key="00">00</button>
+      <button class="key" data-key=".">.</button>
+      <button class="key accent" data-key="COPY">COPY</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:14px" id="tSettingsTitle">Settings</strong>
+        <button class="icon-btn accent" id="closeSettingsBtn">Done</button>
+      </div>
+
+      <div class="settings-section">
+        <label class="settings-label" for="themeSelect" id="tThemeLabel">Background / Theme</label>
+        <select class="settings-select" id="themeSelect" aria-label="Theme">
+          <option value="dark">Slate (Dark)</option>
+          <option value="light">Light</option>
+          <option value="gold">Gold</option>
+          <option value="ocean">Ocean</option>
+          <option value="amoled">AMOLED Black</option>
+        </select>
+      </div>
+
+      <div class="settings-section">
+        <label class="settings-label" for="langSelect" id="tLangLabel">Language</label>
+        <select class="settings-select" id="langSelect" aria-label="Language">
+          <option value="en">English (EN)</option>
+          <option value="ar">العربية (AR)</option>
+          <option value="tl">Tagalog (TL)</option>
+          <option value="hi">हिन्दी (HI)</option>
+          <option value="ur">اردو (UR)</option>
+          <option value="ru">Русский (RU)</option>
+          <option value="ko">한국어 (KO)</option>
+          <option value="ja">日本語 (JA)</option>
+          <option value="zh">中文 (ZH)</option>
+        </select>
+      </div>
+
+      <div class="settings-section">
+        <span class="settings-label" id="tAddCountryLabel">Add Country (Auto Flag, Code & Live Rate)</span>
+        <div class="country-form-grid" dir="ltr">
+          <input class="settings-input" id="newCountryName" type="text" list="worldCountriesList" placeholder="Type or select a country (e.g. Singapore)" autocomplete="off" />
+          <datalist id="worldCountriesList"></datalist>
+        </div>
+        <div class="country-preview" id="countryAutoPreview" dir="ltr">
+          <span>Auto-detect: Flag, Code & 1 AED Rate</span>
+          <strong>—</strong>
+        </div>
+        <button class="save-btn" id="addCountryBtn" type="button">Add Country</button>
+        <div class="feedback-msg" id="countryFeedback"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="calcModal">
+    <div class="modal" dir="ltr">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:13px">Quick Calculator</strong>
+        <button class="icon-btn" id="closeCalcBtn">Close</button>
+      </div>
+      <div class="calc-screen">
+        <div class="calc-expr" id="calcExpr">0</div>
+        <div class="calc-res" id="calcRes">0</div>
+      </div>
+      <div class="calc-grid">
+        <button class="c-btn op" data-ck="C">C</button>
+        <button class="c-btn op" data-ck="DEL">⌫</button>
+        <button class="c-btn op" data-ck="+VAT">+5%</button>
+        <button class="c-btn op" data-ck="/">÷</button>
+
+        <button class="c-btn" data-ck="7">7</button>
+        <button class="c-btn" data-ck="8">8</button>
+        <button class="c-btn" data-ck="9">9</button>
+        <button class="c-btn op" data-ck="*">×</button>
+
+        <button class="c-btn" data-ck="4">4</button>
+        <button class="c-btn" data-ck="5">5</button>
+        <button class="c-btn" data-ck="6">6</button>
+        <button class="c-btn op" data-ck="-">−</button>
+
+        <button class="c-btn" data-ck="1">1</button>
+        <button class="c-btn" data-ck="2">2</button>
+        <button class="c-btn" data-ck="3">3</button>
+        <button class="c-btn op" data-ck="+">+</button>
+
+        <button class="c-btn" data-ck="0">0</button>
+        <button class="c-btn" data-ck=".">.</button>
+        <button class="c-btn op" data-ck="=">=</button>
+        <button class="c-btn" style="background:var(--accent);color:var(--accent-text);border:none" id="sendToMainBtn">USE</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="ratesModal">
+    <div class="modal" dir="ltr">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong style="font-size:13px">Edit Rates (1 AED =)</strong>
+        <div style="display:flex;gap:5px">
+          <button class="icon-btn" id="resetAutoRatesBtn">Auto Sync</button>
+          <button class="icon-btn accent" id="closeRatesBtn">Done</button>
+        </div>
+      </div>
+      <div class="rate-list" id="rateList"></div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      const DEFAULT_CURRENCIES = [
+        { code: 'PHP', name: 'Philippines', flag: '🇵🇭', rate: 15.75 },
+        { code: 'USD', name: 'USA', flag: '🇺🇸', rate: 0.2723 },
+        { code: 'GBP', name: 'UK', flag: '🇬🇧', rate: 0.2145 },
+        { code: 'EUR', name: 'Euro', flag: '🇪🇺', rate: 0.2510 },
+        { code: 'PKR', name: 'Pakistan', flag: '🇵🇰', rate: 75.80 },
+        { code: 'INR', name: 'India', flag: '🇮🇳', rate: 22.90 },
+        { code: 'RUB', name: 'Russia', flag: '🇷🇺', rate: 26.50 },
+        { code: 'OMR', name: 'Oman', flag: '🇴🇲', rate: 0.1048 },
+        { code: 'QAR', name: 'Qatar', flag: '🇶🇦', rate: 0.9912 },
+        { code: 'BHD', name: 'Bahrain', flag: '🇧🇭', rate: 0.1026 },
+        { code: 'KRW', name: 'South Korea', flag: '🇰🇷', rate: 378.50 },
+        { code: 'JPY', name: 'Japan', flag: '🇯🇵', rate: 41.80 },
+        { code: 'CNY', name: 'China', flag: '🇨🇳', rate: 1.97 }
+      ];
+
+      const WORLD_COUNTRIES = [
+        { name: 'Afghanistan', code: 'AFN', flag: '🇦🇫', aliases: ['afghan'] },
+        { name: 'Albania', code: 'ALL', flag: '🇦🇱', aliases: [] },
+        { name: 'Algeria', code: 'DZD', flag: '🇩🇿', aliases: [] },
+        { name: 'Andorra', code: 'EUR', flag: '🇦🇩', aliases: [] },
+        { name: 'Angola', code: 'AOA', flag: '🇦🇴', aliases: [] },
+        { name: 'Argentina', code: 'ARS', flag: '🇦🇷', aliases: [] },
+        { name: 'Armenia', code: 'AMD', flag: '🇦🇲', aliases: [] },
+        { name: 'Australia', code: 'AUD', flag: '🇦🇺', aliases: ['aus', 'aussie'] },
+        { name: 'Austria', code: 'EUR', flag: '🇦🇹', aliases: [] },
+        { name: 'Azerbaijan', code: 'AZN', flag: '🇦🇿', aliases: [] },
+        { name: 'Bahamas', code: 'BSD', flag: '🇧🇸', aliases: [] },
+        { name: 'Bahrain', code: 'BHD', flag: '🇧🇭', aliases: [] },
+        { name: 'Bangladesh', code: 'BDT', flag: '🇧🇩', aliases: ['bd'] },
+        { name: 'Barbados', code: 'BBD', flag: '🇧🇧', aliases: [] },
+        { name: 'Belarus', code: 'BYN', flag: '🇧🇾', aliases: [] },
+        { name: 'Belgium', code: 'EUR', flag: '🇧🇪', aliases: [] },
+        { name: 'Belize', code: 'BZD', flag: '🇧🇿', aliases: [] },
+        { name: 'Benin', code: 'XOF', flag: '🇧🇯', aliases: [] },
+        { name: 'Bhutan', code: 'BTN', flag: '🇧🇹', aliases: [] },
+        { name: 'Bolivia', code: 'BOB', flag: '🇧🇴', aliases: [] },
+        { name: 'Bosnia and Herzegovina', code: 'BAM', flag: '🇧🇦', aliases: ['bosnia'] },
+        { name: 'Botswana', code: 'BWP', flag: '🇧🇼', aliases: [] },
+        { name: 'Brazil', code: 'BRL', flag: '🇧🇷', aliases: ['brasil'] },
+        { name: 'Brunei', code: 'BND', flag: '🇧🇳', aliases: [] },
+        { name: 'Bulgaria', code: 'BGN', flag: '🇧🇬', aliases: [] },
+        { name: 'Burkina Faso', code: 'XOF', flag: '🇧🇫', aliases: [] },
+        { name: 'Burundi', code: 'BIF', flag: '🇧🇮', aliases: [] },
+        { name: 'Cambodia', code: 'KHR', flag: '🇰🇭', aliases: [] },
+        { name: 'Cameroon', code: 'XAF', flag: '🇨🇲', aliases: [] },
+        { name: 'Canada', code: 'CAD', flag: '🇨🇦', aliases: ['can'] },
+        { name: 'Cape Verde', code: 'CVE', flag: '🇨🇻', aliases: [] },
+        { name: 'Central African Republic', code: 'XAF', flag: '🇨🇫', aliases: [] },
+        { name: 'Chad', code: 'XAF', flag: '🇹🇩', aliases: [] },
+        { name: 'Chile', code: 'CLP', flag: '🇨🇱', aliases: [] },
+        { name: 'China', code: 'CNY', flag: '🇨🇳', aliases: ['prc', 'rmb'] },
+        { name: 'Colombia', code: 'COP', flag: '🇨🇴', aliases: [] },
+        { name: 'Comoros', code: 'KMF', flag: '🇰🇲', aliases: [] },
+        { name: 'Congo', code: 'XAF', flag: '🇨🇬', aliases: ['republic of congo'] },
+        { name: 'DR Congo', code: 'CDF', flag: '🇨🇩', aliases: ['democratic republic of congo'] },
+        { name: 'Costa Rica', code: 'CRC', flag: '🇨🇷', aliases: [] },
+        { name: 'Croatia', code: 'EUR', flag: '🇭🇷', aliases: [] },
+        { name: 'Cuba', code: 'CUP', flag: '🇨🇺', aliases: [] },
+        { name: 'Cyprus', code: 'EUR', flag: '🇨🇾', aliases: [] },
+        { name: 'Czech Republic', code: 'CZK', flag: '🇨🇿', aliases: ['czechia'] },
+        { name: 'Denmark', code: 'DKK', flag: '🇩🇰', aliases: [] },
+        { name: 'Djibouti', code: 'DJF', flag: '🇩🇯', aliases: [] },
+        { name: 'Dominican Republic', code: 'DOP', flag: '🇩🇴', aliases: [] },
+        { name: 'Ecuador', code: 'USD', flag: '🇪🇨', aliases: [] },
+        { name: 'Egypt', code: 'EGP', flag: '🇪🇬', aliases: ['misr'] },
+        { name: 'El Salvador', code: 'USD', flag: '🇸🇻', aliases: [] },
+        { name: 'Equatorial Guinea', code: 'XAF', flag: '🇬🇶', aliases: [] },
+        { name: 'Eritrea', code: 'ERN', flag: '🇪🇷', aliases: [] },
+        { name: 'Estonia', code: 'EUR', flag: '🇪🇪', aliases: [] },
+        { name: 'Eswatini', code: 'SZL', flag: '🇸🇿', aliases: ['swaziland'] },
+        { name: 'Ethiopia', code: 'ETB', flag: '🇪🇹', aliases: [] },
+        { name: 'Eurozone', code: 'EUR', flag: '🇪🇺', aliases: ['euro', 'europe', 'eu'] },
+        { name: 'Fiji', code: 'FJD', flag: '🇫🇯', aliases: [] },
+        { name: 'Finland', code: 'EUR', flag: '🇫🇮', aliases: [] },
+        { name: 'France', code: 'EUR', flag: '🇫🇷', aliases: [] },
+        { name: 'Gabon', code: 'XAF', flag: '🇬🇦', aliases: [] },
+        { name: 'Gambia', code: 'GMD', flag: '🇬🇲', aliases: [] },
+        { name: 'Georgia', code: 'GEL', flag: '🇬🇪', aliases: [] },
+        { name: 'Germany', code: 'EUR', flag: '🇩🇪', aliases: ['deutschland'] },
+        { name: 'Ghana', code: 'GHS', flag: '🇬🇭', aliases: [] },
+        { name: 'Greece', code: 'EUR', flag: '🇬🇷', aliases: [] },
+        { name: 'Guatemala', code: 'GTQ', flag: '🇬🇹', aliases: [] },
+        { name: 'Guinea', code: 'GNF', flag: '🇬🇳', aliases: [] },
+        { name: 'Guyana', code: 'GYD', flag: '🇬🇾', aliases: [] },
+        { name: 'Haiti', code: 'HTG', flag: '🇭🇹', aliases: [] },
+        { name: 'Honduras', code: 'HNL', flag: '🇭🇳', aliases: [] },
+        { name: 'Hong Kong', code: 'HKD', flag: '🇭🇰', aliases: ['hk'] },
+        { name: 'Hungary', code: 'HUF', flag: '🇭🇺', aliases: [] },
+        { name: 'Iceland', code: 'ISK', flag: '🇮🇸', aliases: [] },
+        { name: 'India', code: 'INR', flag: '🇮🇳', aliases: ['bharat'] },
+        { name: 'Indonesia', code: 'IDR', flag: '🇮🇩', aliases: ['indo'] },
+        { name: 'Iran', code: 'IRR', flag: '🇮🇷', aliases: [] },
+        { name: 'Iraq', code: 'IQD', flag: '🇮🇶', aliases: [] },
+        { name: 'Ireland', code: 'EUR', flag: '🇮🇪', aliases: [] },
+        { name: 'Israel', code: 'ILS', flag: '🇮🇱', aliases: [] },
+        { name: 'Italy', code: 'EUR', flag: '🇮🇹', aliases: ['italia'] },
+        { name: 'Ivory Coast', code: 'XOF', flag: '🇨🇮', aliases: ['cote divoire'] },
+        { name: 'Jamaica', code: 'JMD', flag: '🇯🇲', aliases: [] },
+        { name: 'Japan', code: 'JPY', flag: '🇯🇵', aliases: ['nippon'] },
+        { name: 'Jordan', code: 'JOD', flag: '🇯🇴', aliases: [] },
+        { name: 'Kazakhstan', code: 'KZT', flag: '🇰🇿', aliases: ['kazakh'] },
+        { name: 'Kenya', code: 'KES', flag: '🇰🇪', aliases: [] },
+        { name: 'Kuwait', code: 'KWD', flag: '🇰🇼', aliases: [] },
+        { name: 'Kyrgyzstan', code: 'KGS', flag: '🇰🇬', aliases: [] },
+        { name: 'Laos', code: 'LAK', flag: '🇱🇦', aliases: [] },
+        { name: 'Latvia', code: 'EUR', flag: '🇱🇻', aliases: [] },
+        { name: 'Lebanon', code: 'LBP', flag: '🇱🇧', aliases: [] },
+        { name: 'Lesotho', code: 'LSL', flag: '🇱🇸', aliases: [] },
+        { name: 'Liberia', code: 'LRD', flag: '🇱🇷', aliases: [] },
+        { name: 'Libya', code: 'LYD', flag: '🇱🇾', aliases: [] },
+        { name: 'Liechtenstein', code: 'CHF', flag: '🇱🇮', aliases: [] },
+        { name: 'Lithuania', code: 'EUR', flag: '🇱🇹', aliases: [] },
+        { name: 'Luxembourg', code: 'EUR', flag: '🇱🇺', aliases: [] },
+        { name: 'Macau', code: 'MOP', flag: '🇲🇴', aliases: [] },
+        { name: 'Madagascar', code: 'MGA', flag: '🇲🇬', aliases: [] },
+        { name: 'Malawi', code: 'MWK', flag: '🇲🇼', aliases: [] },
+        { name: 'Malaysia', code: 'MYR', flag: '🇲🇾', aliases: [] },
+        { name: 'Maldives', code: 'MVR', flag: '🇲🇻', aliases: [] },
+        { name: 'Mali', code: 'XOF', flag: '🇲🇱', aliases: [] },
+        { name: 'Malta', code: 'EUR', flag: '🇲🇹', aliases: [] },
+        { name: 'Mauritania', code: 'MRU', flag: '🇲🇷', aliases: [] },
+        { name: 'Mauritius', code: 'MUR', flag: '🇲🇺', aliases: [] },
+        { name: 'Mexico', code: 'MXN', flag: '🇲🇽', aliases: [] },
+        { name: 'Moldova', code: 'MDL', flag: '🇲🇩', aliases: [] },
+        { name: 'Monaco', code: 'EUR', flag: '🇲🇨', aliases: [] },
+        { name: 'Mongolia', code: 'MNT', flag: '🇲🇳', aliases: [] },
+        { name: 'Montenegro', code: 'EUR', flag: '🇲🇪', aliases: [] },
+        { name: 'Morocco', code: 'MAD', flag: '🇲🇦', aliases: [] },
+        { name: 'Mozambique', code: 'MZN', flag: '🇲🇿', aliases: [] },
+        { name: 'Myanmar', code: 'MMK', flag: '🇲🇲', aliases: ['burma'] },
+        { name: 'Namibia', code: 'NAD', flag: '🇳🇦', aliases: [] },
+        { name: 'Nepal', code: 'NPR', flag: '🇳🇵', aliases: [] },
+        { name: 'Netherlands', code: 'EUR', flag: '🇳🇱', aliases: ['holland', 'dutch'] },
+        { name: 'New Zealand', code: 'NZD', flag: '🇳🇿', aliases: ['nz', 'kiwi'] },
+        { name: 'Nicaragua', code: 'NIO', flag: '🇳🇮', aliases: [] },
+        { name: 'Niger', code: 'XOF', flag: '🇳🇪', aliases: [] },
+        { name: 'Nigeria', code: 'NGN', flag: '🇳🇬', aliases: [] },
+        { name: 'North Macedonia', code: 'MKD', flag: '🇲🇰', aliases: ['macedonia'] },
+        { name: 'Norway', code: 'NOK', flag: '🇳🇴', aliases: [] },
+        { name: 'Oman', code: 'OMR', flag: '🇴🇲', aliases: [] },
+        { name: 'Pakistan', code: 'PKR', flag: '🇵🇰', aliases: ['pak'] },
+        { name: 'Palestine', code: 'ILS', flag: '🇵🇸', aliases: [] },
+        { name: 'Panama', code: 'PAB', flag: '🇵🇦', aliases: [] },
+        { name: 'Papua New Guinea', code: 'PGK', flag: '🇵🇬', aliases: [] },
+        { name: 'Paraguay', code: 'PYG', flag: '🇵🇾', aliases: [] },
+        { name: 'Peru', code: 'PEN', flag: '🇵🇪', aliases: [] },
+        { name: 'Philippines', code: 'PHP', flag: '🇵🇭', aliases: ['ph', 'pinas', 'pilipinas'] },
+        { name: 'Poland', code: 'PLN', flag: '🇵🇱', aliases: [] },
+        { name: 'Portugal', code: 'EUR', flag: '🇵🇹', aliases: [] },
+        { name: 'Qatar', code: 'QAR', flag: '🇶🇦', aliases: [] },
+        { name: 'Romania', code: 'RON', flag: '🇷🇴', aliases: [] },
+        { name: 'Russia', code: 'RUB', flag: '🇷🇺', aliases: ['russian federation'] },
+        { name: 'Rwanda', code: 'RWF', flag: '🇷🇼', aliases: [] },
+        { name: 'Saudi Arabia', code: 'SAR', flag: '🇸🇦', aliases: ['ksa', 'saudi'] },
+        { name: 'Senegal', code: 'XOF', flag: '🇸🇳', aliases: [] },
+        { name: 'Serbia', code: 'RSD', flag: '🇷🇸', aliases: [] },
+        { name: 'Seychelles', code: 'SCR', flag: '🇸🇨', aliases: [] },
+        { name: 'Sierra Leone', code: 'SLL', flag: '🇸🇱', aliases: [] },
+        { name: 'Singapore', code: 'SGD', flag: '🇸🇬', aliases: ['sg'] },
+        { name: 'Slovakia', code: 'EUR', flag: '🇸🇰', aliases: [] },
+        { name: 'Slovenia', code: 'EUR', flag: '🇸🇮', aliases: [] },
+        { name: 'Somalia', code: 'SOS', flag: '🇸🇴', aliases: [] },
+        { name: 'South Africa', code: 'ZAR', flag: '🇿🇦', aliases: ['sa', 'rsa'] },
+        { name: 'South Korea', code: 'KRW', flag: '🇰🇷', aliases: ['korea', 'rok'] },
+        { name: 'South Sudan', code: 'SSP', flag: '🇸🇸', aliases: [] },
+        { name: 'Spain', code: 'EUR', flag: '🇪🇸', aliases: ['espana'] },
+        { name: 'Sri Lanka', code: 'LKR', flag: '🇱🇰', aliases: [] },
+        { name: 'Sudan', code: 'SDG', flag: '🇸🇩', aliases: [] },
+        { name: 'Suriname', code: 'SRD', flag: '🇸🇷', aliases: [] },
+        { name: 'Sweden', code: 'SEK', flag: '🇸🇪', aliases: [] },
+        { name: 'Switzerland', code: 'CHF', flag: '🇨🇭', aliases: ['swiss'] },
+        { name: 'Syria', code: 'SYP', flag: '🇸🇾', aliases: [] },
+        { name: 'Taiwan', code: 'TWD', flag: '🇹🇼', aliases: [] },
+        { name: 'Tajikistan', code: 'TJS', flag: '🇹🇯', aliases: [] },
+        { name: 'Tanzania', code: 'TZS', flag: '🇹🇿', aliases: [] },
+        { name: 'Thailand', code: 'THB', flag: '🇹🇭', aliases: ['thai'] },
+        { name: 'Togo', code: 'XOF', flag: '🇹🇬', aliases: [] },
+        { name: 'Trinidad and Tobago', code: 'TTD', flag: '🇹🇹', aliases: ['trinidad'] },
+        { name: 'Tunisia', code: 'TND', flag: '🇹🇳', aliases: [] },
+        { name: 'Turkey', code: 'TRY', flag: '🇹🇷', aliases: ['turkiye'] },
+        { name: 'Turkmenistan', code: 'TMT', flag: '🇹🇲', aliases: [] },
+        { name: 'Uganda', code: 'UGX', flag: '🇺🇬', aliases: [] },
+        { name: 'Ukraine', code: 'UAH', flag: '🇺🇦', aliases: [] },
+        { name: 'United Arab Emirates', code: 'AED', flag: '🇦🇪', aliases: ['uae', 'dubai', 'abu dhabi'] },
+        { name: 'United Kingdom', code: 'GBP', flag: '🇬🇧', aliases: ['uk', 'britain', 'england', 'scotland'] },
+        { name: 'United States', code: 'USD', flag: '🇺🇸', aliases: ['usa', 'us', 'america'] },
+        { name: 'Uruguay', code: 'UYU', flag: '🇺🇾', aliases: [] },
+        { name: 'Uzbekistan', code: 'UZS', flag: '🇺🇿', aliases: ['uzbek'] },
+        { name: 'Venezuela', code: 'VES', flag: '🇻🇪', aliases: [] },
+        { name: 'Vietnam', code: 'VND', flag: '🇻🇳', aliases: ['viet nam'] },
+        { name: 'Yemen', code: 'YER', flag: '🇾🇪', aliases: [] },
+        { name: 'Zambia', code: 'ZMW', flag: '🇿🇲', aliases: [] },
+        { name: 'Zimbabwe', code: 'ZWL', flag: '🇿🇼', aliases: [] }
+      ];
+
+      const I18N = {
+        en: { dir: 'ltr', title: 'UAE POS Utility', tax: 'Tax Refund', fx: 'Currencies', emi: 'Installments', net: 'Net Price (Excl. 5%)', vat: '5% VAT Paid', refund: 'Tourist Refund (85% - Fee)', ok: 'Eligible for Planet Tax Free (Min AED 250)', warn: 'Below AED 250 Minimum Spend', settings: 'Settings', theme: 'Background / Theme', lang: 'Language', addCountry: 'Add Country (Auto Flag, Code & Live Rate)' },
+        ar: { dir: 'rtl', title: 'حاسبة نقاط البيع', tax: 'استرداد الضريبة', fx: 'العملات', emi: 'الأقساط الشهرية', net: 'السعر الصافي', vat: 'ضريبة 5%', refund: 'المبلغ المسترد للسائح', ok: 'مؤهل لاسترداد الضريبة (250 درهم)', warn: 'أقل من الحد الأدنى 250 درهم', settings: 'الإعدادات', theme: 'الخلفية / المظهر', lang: 'اللغة', addCountry: 'إضافة دولة (تعبئة تلقائية للعلم والعملة والسعر)' },
+        tl: { dir: 'ltr', title: 'UAE POS Utility', tax: 'Tax Refund', fx: 'Palitan', emi: 'Hulugan (Months)', net: 'Presyo (Walang VAT)', vat: '5% VAT Binayaran', refund: 'Balik na Tax (85% - Fee)', ok: 'Pasok sa Tax Free (Min AED 250)', warn: 'Kulang sa AED 250 Minimum', settings: 'Settings', theme: 'Background / Tema', lang: 'Wika', addCountry: 'Magdagdag ng Bansa (Auto Flag, Code at Rate)' },
+        hi: { dir: 'ltr', title: 'UAE POS कैलकुलेटर', tax: 'टैक्स रिफंड', fx: 'मुद्राएं', emi: 'मासिक किस्त', net: 'शुद्ध मूल्य', vat: '5% वैट', refund: 'अनुमानित रिफंड', ok: 'टैक्स फ्री के लिए पात्र', warn: 'AED 250 से कम', settings: 'सेटिंग्स', theme: 'बैकग्राउंड / थीम', lang: 'भाषा', addCountry: 'देश जोड़ें (ऑटो फ्लैग, कोड और लाइव रेट)' },
+        ur: { dir: 'rtl', title: 'یو اے ای کیلکولیٹر', tax: 'ٹیکس ریفنڈ', fx: 'کرنسیاں', emi: 'ماہانہ اقساط', net: 'اصل قیمت', vat: '5% ویٹ', refund: 'واپس ملنے والا ٹیکس', ok: 'ٹیکس واپسی کے لیے اہل', warn: '250 درہم سے کم', settings: 'ترتیبات', theme: 'پس منظر / تھیم', lang: 'زبان', addCountry: 'ملک شامل کریں (خودکار جھنڈا، کوڈ اور ریٹ)' },
+        ru: { dir: 'ltr', title: 'UAE POS Утилита', tax: 'Возврат Tax Free', fx: 'Валюты', emi: 'Рассрочка', net: 'Цена без НДС', vat: 'НДС 5%', refund: 'Возврат туристу', ok: 'Доступен Tax Free (от 250 AED)', warn: 'Меньше минимума 250 AED', settings: 'Настройки', theme: 'Фон / Тема', lang: 'Язык', addCountry: 'Добавить страну (авто флаг, код и курс)' },
+        ko: { dir: 'ltr', title: 'UAE POS 계산기', tax: '세금 환급', fx: '환율', emi: '할부 계산기', net: '세전 금액', vat: '부가세 5%', refund: '예상 환급액', ok: '택스프리 가능 (최소 250 AED)', warn: '최소 금액 250 AED 미만', settings: '설정', theme: '배경 / 테마', lang: '언어', addCountry: '국가 추가 (국기, 통화 코드 및 실시간 환율 자동 입력)' },
+        ja: { dir: 'ltr', title: 'UAE POS ツール', tax: '免税還付', fx: '通貨換算', emi: '分割払い', net: '税抜価格', vat: 'VAT 5%', refund: '還付予定額', ok: '免税対象 (250 AED以上)', warn: '250 AED未満は対象外', settings: '設定', theme: '背景 / テーマ', lang: '言語', addCountry: '国を追加（国旗・通貨コード・最新レート自動取得）' },
+        zh: { dir: 'ltr', title: '阿联酋收银助手', tax: '游客退税', fx: '汇率转换', emi: '分期付款', net: '不含税价格', vat: '5% 增值税', refund: '预计退税金额', ok: '符合退税条件 (满250迪拉姆)', warn: '低于250迪拉姆最低消费', settings: '设置', theme: '背景 / 主题', lang: '语言', addCountry: '添加国家（自动匹配国旗、货币代码和实时汇率）' }
+      };
+
+      const $ = (id) => document.getElementById(id);
+
+      $('worldCountriesList').innerHTML = WORLD_COUNTRIES
+        .map(c => `<option value="${c.name}">`)
+        .join('');
+
+      function loadCurrencies() {
+        try {
+          const raw = localStorage.getItem('uae_pos_rates');
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+          }
+        } catch (e) {
+          console.error('Rate storage read error:', e);
+        }
+        return DEFAULT_CURRENCIES.map(item => ({ ...item }));
+      }
+
+      const savedTheme = localStorage.getItem('uae_pos_theme') || 'dark';
+      const savedLang = localStorage.getItem('uae_pos_lang') || 'en';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+
+      let state = {
+        input: '1000',
+        tags: 1,
+        feeRate: 0,
+        targetCur: 'PHP',
+        currencies: loadCurrencies(),
+        latestRatesMap: {}
+      };
+
+      $('themeSelect').value = savedTheme;
+      $('langSelect').value = savedLang;
+
+      function resolveCountryEntry(query) {
+        const q = query.trim().toLowerCase().replace(/[^a-z0-9\s]/g, '');
+        if (!q) return null;
+        return (
+          WORLD_COUNTRIES.find(c => c.name.toLowerCase().replace(/[^a-z0-9\s]/g, '') === q) ||
+          WORLD_COUNTRIES.find(c => c.aliases.some(a => a === q)) ||
+          WORLD_COUNTRIES.find(c => c.name.toLowerCase().startsWith(q)) ||
+          WORLD_COUNTRIES.find(c => c.aliases.some(a => a.startsWith(q))) ||
+          WORLD_COUNTRIES.find(c => c.name.toLowerCase().includes(q)) ||
+          null
+        );
+      }
+
+      function updateCountryAutoPreview() {
+        const match = resolveCountryEntry($('newCountryName').value);
+        const preview = $('countryAutoPreview');
+        if (!match) {
+          preview.innerHTML = '<span>Auto-detect: Flag, Code & 1 AED Rate</span><strong>—</strong>';
+          return;
+        }
+        const liveRate = state.latestRatesMap[match.code] || state.currencies.find(c => c.code === match.code)?.rate;
+        const rateLabel = liveRate
+          ? `1 AED = ${Number(liveRate).toFixed(liveRate >= 10 ? 2 : 4)} ${match.code}`
+          : `${match.code} (fetching live...)`;
+        preview.innerHTML = `<span>${match.flag} <strong>${match.name}</strong> (${match.code})</span><strong style="color:var(--accent)">${rateLabel}</strong>`;
+      }
+
+      function formatNum(n, dec = 2) {
+        return Number(n || 0).toLocaleString('en-US', {
+          minimumFractionDigits: dec,
+          maximumFractionDigits: dec
+        });
+      }
+
+      function formatDisplayInput(str) {
+        if (!str) return '0';
+        const parts = str.split('.');
+        const intFormatted = parseInt(parts[0] || '0', 10).toLocaleString('en-US');
+        return parts.length > 1 ? `${intFormatted}.${parts[1]}` : intFormatted;
+      }
+
+      function populateCurrencySelect() {
+        const prev = state.targetCur;
+        $('refundTargetCur').innerHTML = state.currencies
+          .map(c => `<option value="${c.code}">${c.flag} ${c.code}</option>`)
+          .join('');
+        if (state.currencies.some(c => c.code === prev)) {
+          $('refundTargetCur').value = prev;
+        } else {
+          state.targetCur = state.currencies[0]?.code || 'PHP';
+        }
+      }
+
+      function applyLanguage() {
+        const l = I18N[$('langSelect').value] || I18N.en;
+        document.documentElement.dir = l.dir;
+        document.documentElement.lang = $('langSelect').value;
+        $('tTitle').textContent = l.title;
+        $('tTabTax').textContent = l.tax;
+        $('tTabFx').textContent = `${l.fx} (${state.currencies.length})`;
+        $('tTabEmi').textContent = l.emi;
+        $('tNetExcl').textContent = l.net;
+        $('tVatPaid').textContent = l.vat;
+        $('tRefundTitle').textContent = l.refund;
+        $('tSettingsTitle').textContent = l.settings;
+        $('tThemeLabel').textContent = l.theme;
+        $('tLangLabel').textContent = l.lang;
+        $('tAddCountryLabel').textContent = l.addCountry;
+      }
+
+      function render() {
+        applyLanguage();
+        const amount = parseFloat(state.input) || 0;
+        $('mainDisplay').textContent = formatDisplayInput(state.input);
+
+        const net = amount / 1.05;
+        const vat = amount - net;
+        const fee = state.tags * 4.80;
+        const refundAed = amount >= 250 ? Math.max(0, (vat * 0.85) - fee) : 0;
+
+        $('valNet').textContent = `AED ${formatNum(net)}`;
+        $('valVat').textContent = `AED ${formatNum(vat)}`;
+        $('tagCount').textContent = state.tags;
+        $('valRefundAed').textContent = `AED ${formatNum(refundAed)}`;
+
+        const curObj = state.currencies.find(c => c.code === state.targetCur) || state.currencies[0];
+        const targetDec = ['KRW', 'JPY'].includes(curObj.code) ? 0 : 2;
+        $('valRefundFx').textContent = `${curObj.code} ${formatNum(refundAed * curObj.rate, targetDec)}`;
+
+        const lang = I18N[$('langSelect').value] || I18N.en;
+        const statusEl = $('taxStatus');
+        if (amount >= 250) {
+          statusEl.className = 'status-pill ok';
+          statusEl.textContent = lang.ok;
+        } else {
+          statusEl.className = 'status-pill warn';
+          statusEl.textContent = lang.warn;
+        }
+
+        $('fxGrid').innerHTML = state.currencies.map(c => {
+          const dec = ['KRW', 'JPY', 'IDR', 'VND', 'IRR', 'LBP', 'LAK', 'UZS'].includes(c.code)
+            ? 0
+            : (['OMR', 'BHD', 'KWD', 'JOD'].includes(c.code) ? 3 : 2);
+          const removeBtn = c.custom ? `<button class="fx-remove-btn" data-remove-code="${c.code}" title="Remove">✕</button>` : '';
+          return `
+            <div class="fx-item">
+              <div>
+                <div class="fx-code">${c.flag} ${c.code}${removeBtn}</div>
+                <div class="fx-name">${c.name}</div>
+                <div class="fx-rate-sub">1 AED = ${Number(c.rate).toFixed(c.rate >= 10 ? 2 : 4)}</div>
+              </div>
+              <div class="fx-val">${formatNum(amount * c.rate, dec)}</div>
+            </div>
+          `;
+        }).join('');
+
+        document.querySelectorAll('.fx-remove-btn').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const code = btn.dataset.removeCode;
+            state.currencies = state.currencies.filter(c => c.code !== code);
+            localStorage.setItem('uae_pos_rates', JSON.stringify(state.currencies));
+            populateCurrencySelect();
+            render();
+          });
+        });
+
+        const months = [3, 4, 6, 8, 9, 12];
+        $('emiGrid').innerHTML = months.map(m => {
+          const total = amount * (1 + state.feeRate * m);
+          const monthly = total / m;
+          return `
+            <div class="emi-card">
+              <div class="emi-mo">${m} Months</div>
+              <div class="emi-amt">AED ${formatNum(monthly)}/mo</div>
+              <div class="emi-tot">Total: AED ${formatNum(total)}</div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      async function fetchLiveRates() {
+        const statusText = $('fxStatusText');
+        try {
+          const res = await fetch(`https://open.er-api.com/v6/latest/AED?t=${Date.now()}`, { cache: 'no-store' });
+          if (!res.ok) throw new Error('Primary FX feed unavailable');
+          const data = await res.json();
+          if (data && data.rates) {
+            applyFetchedRates(data.rates);
+            return;
+          }
+          throw new Error('Invalid primary FX payload');
+        } catch {
+          try {
+            const fallback = await fetch(
+              `https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/aed.json?t=${Date.now()}`,
+              { cache: 'no-store' }
+            );
+            if (!fallback.ok) throw new Error('Fallback FX feed unavailable');
+            const fbData = await fallback.json();
+            if (fbData && fbData.aed) {
+              const upperRates = {};
+              for (const [k, v] of Object.entries(fbData.aed)) {
+                upperRates[k.toUpperCase()] = v;
+              }
+              applyFetchedRates(upperRates);
+              return;
+            }
+          } catch {
+            statusText.textContent = 'Offline (Cached)';
+          }
+        }
+      }
+
+      function applyFetchedRates(ratesMap) {
+        state.latestRatesMap = { ...state.latestRatesMap, ...ratesMap };
+        let updated = false;
+        state.currencies.forEach(c => {
+          if (!c.locked && ratesMap[c.code] && ratesMap[c.code] > 0) {
+            c.rate = ratesMap[c.code];
+            updated = true;
+          }
+        });
+        if (updated) {
+          localStorage.setItem('uae_pos_rates', JSON.stringify(state.currencies));
+          render();
+        }
+        updateCountryAutoPreview();
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        $('fxStatusText').textContent = `Live 10s • ${now}`;
+      }
+
+      fetchLiveRates();
+      setInterval(fetchLiveRates, 10000);
+
+      $('refreshRatesBtn').addEventListener('click', () => {
+        $('fxStatusText').textContent = 'Syncing...';
+        fetchLiveRates();
+      });
+
+      populateCurrencySelect();
+      $('refundTargetCur').addEventListener('change', (e) => {
+        state.targetCur = e.target.value;
+        render();
+      });
+
+      function copyTextSafe(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          navigator.clipboard.writeText(text).catch(() => fallbackCopy(text));
+        } else {
+          fallbackCopy(text);
+        }
+      }
+
+      function fallbackCopy(text) {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        document.body.appendChild(ta);
+        ta.select();
+        try { document.execCommand('copy'); } catch {}
+        document.body.removeChild(ta);
+      }
+
+      document.querySelectorAll('.key').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const k = btn.dataset.key;
+          if (k === 'CLEAR') state.input = '0';
+          else if (k === 'BACK') state.input = state.input.length > 1 ? state.input.slice(0, -1) : '0';
+          else if (k === '+5%') state.input = ((parseFloat(state.input) || 0) * 1.05).toFixed(2);
+          else if (k === 'COPY') {
+            copyTextSafe(state.input);
+            btn.textContent = 'OK!';
+            setTimeout(() => { btn.textContent = 'COPY'; }, 700);
+            return;
+          } else {
+            if (k === '.' && state.input.includes('.')) return;
+            if (state.input === '0' && k !== '.') state.input = k === '00' ? '0' : k;
+            else if (state.input.length < 11) state.input += k;
+          }
+          render();
+        });
+      });
+
+      document.querySelectorAll('.chip').forEach(c => {
+        c.addEventListener('click', () => {
+          state.input = c.dataset.preset;
+          render();
+        });
+      });
+
+      document.querySelectorAll('.tab').forEach(t => {
+        t.addEventListener('click', () => {
+          document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          $('panelTax').style.display = t.dataset.tab === 'tax' ? 'flex' : 'none';
+          $('panelFx').style.display = t.dataset.tab === 'fx' ? 'flex' : 'none';
+          $('panelEmi').style.display = t.dataset.tab === 'emi' ? 'flex' : 'none';
+        });
+      });
+
+      $('tagMinus').addEventListener('click', () => {
+        if (state.tags > 1) { state.tags--; render(); }
+      });
+      $('tagPlus').addEventListener('click', () => {
+        if (state.tags < 15) { state.tags++; render(); }
+      });
+
+      document.querySelectorAll('.fee-btn').forEach(b => {
+        b.addEventListener('click', () => {
+          document.querySelectorAll('.fee-btn').forEach(x => x.classList.remove('active'));
+          b.classList.add('active');
+          state.feeRate = parseFloat(b.dataset.fee);
+          render();
+        });
+      });
+
+      $('openSettingsBtn').addEventListener('click', () => {
+        $('countryFeedback').textContent = '';
+        updateCountryAutoPreview();
+        $('settingsModal').classList.add('open');
+      });
+      $('closeSettingsBtn').addEventListener('click', () => $('settingsModal').classList.remove('open'));
+
+      $('newCountryName').addEventListener('input', updateCountryAutoPreview);
+
+      $('themeSelect').addEventListener('change', (e) => {
+        document.documentElement.setAttribute('data-theme', e.target.value);
+        localStorage.setItem('uae_pos_theme', e.target.value);
+      });
+
+      $('langSelect').addEventListener('change', (e) => {
+        localStorage.setItem('uae_pos_lang', e.target.value);
+        render();
+      });
+
+      $('addCountryBtn').addEventListener('click', async () => {
+        const rawInput = $('newCountryName').value.trim();
+        const match = resolveCountryEntry(rawInput);
+
+        if (!match) {
+          $('countryFeedback').style.color = '#ef4444';
+          $('countryFeedback').textContent = 'Country not recognized. Pick a country from the list.';
+          return;
+        }
+
+        $('countryFeedback').style.color = 'var(--muted)';
+        $('countryFeedback').textContent = `Fetching live rate for ${match.flag} ${match.name} (${match.code})...`;
+
+        if (!state.latestRatesMap[match.code]) {
+          await fetchLiveRates();
+        }
+
+        const existing = state.currencies.find(c => c.code === match.code);
+        const liveRate = state.latestRatesMap[match.code] || existing?.rate || 1;
+        const isDefault = DEFAULT_CURRENCIES.some(d => d.code === match.code);
+
+        const existingIdx = state.currencies.findIndex(c => c.code === match.code);
+        const entry = {
+          code: match.code,
+          name: match.name,
+          flag: match.flag,
+          rate: liveRate,
+          locked: false,
+          custom: !isDefault
+        };
+
+        if (existingIdx >= 0) {
+          state.currencies[existingIdx] = entry;
+        } else {
+          state.currencies.push(entry);
+        }
+
+        localStorage.setItem('uae_pos_rates', JSON.stringify(state.currencies));
+        populateCurrencySelect();
+        $('newCountryName').value = '';
+        updateCountryAutoPreview();
+        $('countryFeedback').style.color = 'var(--accent)';
+        $('countryFeedback').textContent = `Added ${match.flag} ${match.name} (${match.code}) • 1 AED = ${Number(liveRate).toFixed(liveRate >= 10 ? 2 : 4)}`;
+        render();
+      });
+
+      $('openRatesBtn').addEventListener('click', () => {
+        $('rateList').innerHTML = state.currencies.map((c, idx) => `
+          <div class="rate-row">
+            <span>${c.flag} ${c.code} (${c.name})</span>
+            <input class="rate-input" type="number" step="any" data-idx="${idx}" value="${c.rate}" />
+          </div>
+        `).join('');
+        $('ratesModal').classList.add('open');
+      });
+
+      $('resetAutoRatesBtn').addEventListener('click', () => {
+        state.currencies.forEach(c => { c.locked = false; });
+        fetchLiveRates();
+        $('ratesModal').classList.remove('open');
+      });
+
+      $('closeRatesBtn').addEventListener('click', () => {
+        document.querySelectorAll('.rate-input').forEach(inp => {
+          const val = parseFloat(inp.value);
+          const idx = inp.dataset.idx;
+          if (val > 0 && Math.abs(val - state.currencies[idx].rate) > 1e-6) {
+            state.currencies[idx].rate = val;
+            state.currencies[idx].locked = true;
+          }
+        });
+        localStorage.setItem('uae_pos_rates', JSON.stringify(state.currencies));
+        $('ratesModal').classList.remove('open');
+        render();
+      });
+
+      let calcStr = '';
+
+      function evaluateExpression(expr) {
+        const sanitized = expr.replace(/[^0-9+\-*/.()]/g, '');
+        if (!sanitized) return 0;
+        const tokens = sanitized.match(/(\d+\.?\d*|\.\d+|[+\-*/()])/g);
+        if (!tokens) return 0;
+
+        let pos = 0;
+        function parseExpr() {
+          let left = parseTerm();
+          while (tokens[pos] === '+' || tokens[pos] === '-') {
+            const op = tokens[pos++];
+            const right = parseTerm();
+            left = op === '+' ? left + right : left - right;
+          }
+          return left;
+        }
+        function parseTerm() {
+          let left = parseFactor();
+          while (tokens[pos] === '*' || tokens[pos] === '/') {
+            const op = tokens[pos++];
+            const right = parseFactor();
+            if (op === '/' && right === 0) throw new Error('DivZero');
+            left = op === '*' ? left * right : left / right;
+          }
+          return left;
+        }
+        function parseFactor() {
+          const tok = tokens[pos++];
+          if (tok === '(') {
+            const val = parseExpr();
+            if (tokens[pos] === ')') pos++;
+            return val;
+          }
+          if (tok === '-') return -parseFactor();
+          if (tok === '+') return parseFactor();
+          const num = parseFloat(tok);
+          if (isNaN(num)) throw new Error('Invalid');
+          return num;
+        }
+        const result = parseExpr();
+        if (!isFinite(result)) throw new Error('Invalid');
+        return result;
+      }
+
+      $('openCalcBtn').addEventListener('click', () => $('calcModal').classList.add('open'));
+      $('closeCalcBtn').addEventListener('click', () => $('calcModal').classList.remove('open'));
+
+      document.querySelectorAll('[data-ck]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const k = btn.dataset.ck;
+          if (k === 'C') {
+            calcStr = '';
+            $('calcExpr').textContent = '0';
+            $('calcRes').textContent = '0';
+          } else if (k === 'DEL') {
+            calcStr = calcStr.slice(0, -1);
+            $('calcExpr').textContent = calcStr || '0';
+          } else if (k === '+VAT') {
+            try {
+              const v = evaluateExpression(calcStr || $('calcRes').textContent || '0') * 1.05;
+              calcStr = String(Number(v.toFixed(2)));
+              $('calcRes').textContent = calcStr;
+            } catch {
+              $('calcRes').textContent = 'Error';
+            }
+          } else if (k === '=') {
+            try {
+              const v = evaluateExpression(calcStr || '0');
+              calcStr = String(Number(v.toFixed(4)));
+              $('calcRes').textContent = calcStr;
+            } catch {
+              $('calcRes').textContent = 'Error';
+            }
+          } else {
+            calcStr += k;
+            $('calcExpr').textContent = calcStr;
+          }
+        });
+      });
+
+      $('sendToMainBtn').addEventListener('click', () => {
+        const val = parseFloat($('calcRes').textContent);
+        if (!isNaN(val) && val >= 0) {
+          state.input = String(Number(val.toFixed(2)));
+          render();
+        }
+        $('calcModal').classList.remove('open');
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if ($('calcModal').classList.contains('open') ||
+            $('settingsModal').classList.contains('open') ||
+            $('ratesModal').classList.contains('open')) {
+          return;
+        }
+        if (/^[0-9.]$/.test(e.key)) {
+          const btn = document.querySelector(`.key[data-key="${e.key}"]`);
+          if (btn) btn.click();
+        } else if (e.key === 'Backspace') {
+          document.querySelector('.key[data-key="BACK"]')?.click();
+        } else if (e.key === 'Escape') {
+          document.querySelector('.key[data-key="CLEAR"]')?.click();
+        }
+      });
+
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('./sw.js').catch((err) => {
+            console.warn('Service worker registration skipped:', err);
+          });
+        });
+      }
+
+      render();
+    })();
+  </script>
+</body>
+</html>
