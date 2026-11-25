@@ -1,11 +1,11 @@
 {
-  "name": "UAE POS Tax & Currency Utility",
-  "short_name": "Tax & FX POS",
+  "name": "Taxv8.0",
+  "short_name": "Taxv8.0",
   "description": "UAE POS Tax Refund, Live Multi-Currency Converter, and Monthly Installment Planner",
-  "start_url": "./",
-  "scope": "./",
-  "display": "standalone",
-  "orientation": "portrait",
+  "start_url": "./Taxv8.0/",
+  "scope": "./Taxv8.0/",
+  "display": "fullscreen",
+  "orientation": "any",
   "background_color": "#0f172a",
   "theme_color": "#059669",
   "icons": [
@@ -15,5 +15,19 @@
       "type": "image/svg+xml",
       "purpose": "any maskable"
     }
+  ],
+  "id": "/Taxv8.0/",
+  "dir": "auto",
+  "lang": "en",
+  "display_override": [
+    "window-controls-overlay",
+    "fullscreen",
+    "standalone",
+    "browser",
+    "minimal-ui"
+  ],
+  "categories": [
+    "finance",
+    "travel"
   ]
 }
